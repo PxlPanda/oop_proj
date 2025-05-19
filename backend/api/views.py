@@ -12,9 +12,12 @@ class TemplateUploadView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
+        print("🔍 DEBUG: request.data =", request.data)
+        print("🔍 DEBUG: request.FILES =", request.FILES)
         serializer = TemplateSessionSerializer(data=request.data)
         if serializer.is_valid():
             session = serializer.save()
             return Response({"sessionId": str(session.id)}, status=status.HTTP_201_CREATED)
         else:
+            print("❌ serializer.errors =", serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

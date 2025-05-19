@@ -23,13 +23,22 @@ class WordSampleSerializer(serializers.Serializer):
     height = serializers.IntegerField()
     is_corrected = serializers.BooleanField(default=False)
 
+from django.core.files.storage import default_storage
+
 class TemplateSessionSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
-    template_type = serializers.CharField()
+    template_type = serializers.CharField(required=False, allow_blank=True)
     image = serializers.ImageField()
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False, allow_null=True)
     symbols = SymbolSerializer(many=True, read_only=True)
     words = WordSampleSerializer(many=True, read_only=True)
 
     def create(self, validated_data):
+        uploaded_image = validated_data.pop("image")
+        image_path = default_storage.save(f"uploads/{uploaded_image.name}", uploaded_image)
+
+        validated_data["image_path"] = image_path
+        validated_data["template_type"] = validated_data.get("template_type", "letters")
+        validated_data["user_id"] = "demo"  # временно, пока нет авторизации
+
         return TemplateSession(**validated_data).save()
+
