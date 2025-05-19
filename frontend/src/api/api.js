@@ -6,12 +6,11 @@ export const api = axios.create({
 
 export const uploadTemplate = (file) => {
   const form = new FormData();
-  form.append('template', file);
+  form.append('image', file);
   return api.post('/upload-template/', form);
 };
 
-export const getSymbols = (sessionId) => api.get(`/session/${sessionId}/symbols/`);
-export const updateSymbol = (sessionId, symbolId, data) =>
-  api.put(`/session/${sessionId}/symbol/${symbolId}/`, data);
-export const reviewSession = (sessionId) =>
-  api.post(`/session/${sessionId}/review/`);
+
+export const getSymbols = (sessionId) =>                    api.get(`/session/${sessionId}/symbols/`);
+export const updateSymbol = (sessionId, symbolId, data) =>  api.put(`/session/${sessionId}/symbol/${symbolId}/`, data);
+export const reviewSession = (sessionId) =>                 api.post(`/session/${sessionId}/review/`);

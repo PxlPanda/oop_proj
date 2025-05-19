@@ -1,3 +1,4 @@
+# serializers.py
 from rest_framework import serializers
 from .mongo_models import TemplateSession, Symbol, WordSample
 from django.contrib.auth.models import User
@@ -26,7 +27,7 @@ class TemplateSessionSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     template_type = serializers.CharField()
     image = serializers.ImageField()
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False, allow_null=True)
     symbols = SymbolSerializer(many=True, read_only=True)
     words = WordSampleSerializer(many=True, read_only=True)
 
