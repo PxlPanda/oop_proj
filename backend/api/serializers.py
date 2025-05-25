@@ -28,9 +28,16 @@ from django.core.files.storage import default_storage
 class TemplateSessionSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     template_type = serializers.CharField(required=False, allow_blank=True)
-    image = serializers.ImageField()
+    image = serializers.ImageField(write_only=True)
+    image_url = serializers.SerializerMethodField()  # ← добавляем поле
     symbols = SymbolSerializer(many=True, read_only=True)
     words = WordSampleSerializer(many=True, read_only=True)
+
+    def get_image_url(self, obj):
+        from django.conf import settings
+        if not obj.image_path:
+            return None
+        return settings.MEDIA_URL + obj.image_path  # например, /media/uploads/abc.png
 
     def create(self, validated_data):
         uploaded_image = validated_data.pop("image")

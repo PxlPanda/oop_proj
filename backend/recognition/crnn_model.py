@@ -3,8 +3,8 @@ import torch.nn as nn
 import torch
 
 class BidirectionalLSTM(nn.Module):
-    def init(self, nIn, nHidden, nOut):
-        super(BidirectionalLSTM, self).init()
+    def __init__(self, nIn, nHidden, nOut):
+        super(BidirectionalLSTM, self).__init__()
         self.rnn = nn.LSTM(nIn, nHidden, bidirectional=True)
         self.embedding = nn.Linear(nHidden * 2, nOut)
 
@@ -17,8 +17,8 @@ class BidirectionalLSTM(nn.Module):
         return output
 
 class CRNN(nn.Module):
-    def init(self, imgH, nc, nclass, nh):
-        super(CRNN, self).init()
+    def __init__(self, imgH, nc, nclass, nh):
+        super(CRNN, self).__init__()
         assert imgH % 16 == 0, 'imgH has to be a multiple of 16'
         self.cnn = nn.Sequential(
             nn.Conv2d(nc, 64, 3, 1, 1),

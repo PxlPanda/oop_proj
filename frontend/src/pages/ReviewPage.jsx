@@ -1,90 +1,73 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import EditorModal from '../components/EditorModal';
+import { getSymbols, updateSymbol } from '../api/api';
 
 export default function ReviewPage() {
   const { sessionId } = useParams();
-  const navigate = useNavigate();
 
-  // Список символов: по умолчанию — символ A, id от 1 до 8
-  const [symbols, setSymbols] = useState(
-    Array.from({ length: 8 }, (_, i) => ({
-      id: i + 1,
-      char: 'A',
-    }))
-  );
+  const [symbols, setSymbols] = useState([]);
+  const [imageUrl, setImageUrl] = useState('');
+  const [editing, setEditing] = useState(null); // символ для редактирования
 
-  const [editing, setEditing] = useState(null); // { id, char } или null
+  useEffect(() => {
+    async function fetchSymbols() {
+      console.log('Загрузка символов для сессии:', sessionId);
+      try {
+        const response = await getSymbols(sessionId);
+        console.log('✅ Ответ от сервера:', response.data);
+        setSymbols(response.data.symbols);
+        setImageUrl(response.data.image_url); // если backend отдаёт image_url
+      } catch (err) {
+        console.error('❌ Ошибка при загрузке символов:', err);
+      }
+    }
+  
+    fetchSymbols();
+  }, [sessionId]);
+  
 
   const handleEdit = (symbol) => {
     setEditing(symbol);
   };
 
-  const handleSave = (newChar) => {
-    setSymbols((prev) =>
-      prev.map((s) =>
+  const handleSave = async (newChar) => {
+    await updateSymbol(sessionId, editing.id, { char: newChar });
+    setSymbols(prev =>
+      prev.map(s =>
         s.id === editing.id ? { ...s, char: newChar } : s
       )
     );
-  };
-
-  const handleMarkReviewed = () => {
-    alert('Отметка как проверено (заглушка)');
-  };
-
-  const handleExport = () => {
-    const json = JSON.stringify(symbols, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `symbols_session_${sessionId}.json`;
-    a.click();
+    setEditing(null);
   };
 
   return (
-    <div className="min-h-screen bg-white p-6">
-      <h1 className="text-2xl font-bold mb-4">
-        Проверка символов (сессия: <span className="text-blue-600">{sessionId}</span>)
-      </h1>
+    <div className="relative bg-gray-50 min-h-screen p-4">
+      <h1 className="text-xl font-bold mb-4">Сессия: {sessionId}</h1>
 
-      {/* Сетка карточек */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        {symbols.map((symbol) => (
-          <div
-            key={symbol.id}
-            className="border rounded p-4 text-center shadow hover:shadow-md transition cursor-pointer"
-            onClick={() => handleEdit(symbol)}
-          >
-            <p className="text-2xl font-mono">{symbol.char}</p>
-            <p className="text-sm text-gray-500">ID: {symbol.id}</p>
-          </div>
-        ))}
-      </div>
+      {imageUrl && (
+        <div className="relative inline-block">
+          <img src={imageUrl} alt="template" className="max-w-full" />
 
-      {/* Кнопки */}
-      <div className="flex flex-wrap gap-4">
-        <button
-          onClick={handleMarkReviewed}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-        >
-          ✅ Отметить как проверено
-        </button>
-        <button
-          onClick={handleExport}
-          className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-        >
-          ⬇️ Скачать JSON
-        </button>
-        <button
-          onClick={() => navigate('/')}
-          className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
-        >
-          ⬅️ Назад
-        </button>
-      </div>
+          {symbols.map((sym) => (
+            <div
+              key={sym.id}
+              onClick={() => handleEdit(sym)}
+              className="absolute bg-white bg-opacity-80 text-sm border border-blue-500 text-blue-800 rounded cursor-pointer flex items-center justify-center"
+              style={{
+                left: sym.x,
+                top: sym.y,
+                width: sym.width,
+                height: sym.height,
+                position: 'absolute',
+              }}
+            >
+              {sym.char}
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* Модалка правки */}
       <EditorModal
         isOpen={!!editing}
         onClose={() => setEditing(null)}
